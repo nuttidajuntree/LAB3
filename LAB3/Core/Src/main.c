@@ -404,8 +404,13 @@ float RoundOfMotor()
 	if (__HAL_DMA_GET_COUNTER((htim2.hdma[1])) != last_counter)
 	{
 		count+=1;
+
+	}
+	if (count == 12)
+	{
 		Time_Round = HAL_GetTick();
 		TimeOf1Round = Time_Round - last_Time_Round;
+		count = 0;
 	}
 
 	//Round = count/12;
@@ -413,7 +418,7 @@ float RoundOfMotor()
 	last_Time_Round = Time_Round;
 	last_counter = __HAL_DMA_GET_COUNTER((htim2.hdma[1]));
 
-	return 1/(TimeOf1Round*60*(10^6));
+	return ((1*60)/(TimeOf1Round*0.001));
 }
 /* USER CODE END 4 */
 
