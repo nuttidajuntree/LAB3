@@ -46,18 +46,24 @@ DMA_HandleTypeDef hdma_tim2_ch1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+// Input Capture
 uint32_t InputCaptureBuffer[IC_BUFFER_SIZE];
-float averageRisingedgePeriod;
+
+// Variable For MotorSetDuty
 uint32_t MotorSetDuty = 0;
 uint32_t duty = 0;
+
+// Variable For MotorReadRPM
 float MotorReadRPM = 0;
-uint32_t count = 0;
-float Round = 0;
+uint32_t CountPulse = 0;
 uint32_t i = 0;
-uint32_t last_counter = 0;
-float TimeOf1Round = 0;
-float Time_Round = 0;
-float last_Time_Round = 0;
+uint32_t sumdiff = 0;
+uint32_t currentDMAPointer = 0;
+uint32_t lastVaildDMAPointer = 0;
+uint32_t firstCapture = 0;
+uint32_t NextCapture = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,7 +74,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
-float RoundOfMotor();
+float IC_Calc_Period();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -126,10 +132,11 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  static uint32_t timestamp = 0;
-	  if (HAL_GetTick()>= timestamp)
+	  if (HAL_GetTick()>= timestamp)		//
 	  {
 		  timestamp = HAL_GetTick()+500;
-		  MotorReadRPM = RoundOfMotor();
+		  CountPulse = IC_Calc_Period();
+		  MotorReadRPM = (1000000*60)/(64*IC_Calc_Period()*12);
 		  duty = MotorSetDuty*10;
 		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty);
 	  }
@@ -160,7 +167,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 100;
+  RCC_OscInitStruct.PLL.PLLN = 84;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -177,7 +184,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -204,7 +211,7 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 999;
+  htim1.Init.Prescaler = 83;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -399,26 +406,21 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-float RoundOfMotor()
+float IC_Calc_Period()
 {
-	if (__HAL_DMA_GET_COUNTER((htim2.hdma[1])) != last_counter)
+	currentDMAPointer = IC_BUFFER_SIZE - __HAL_DMA_GET_COUNTER((htim2.hdma[1]));
+	lastVaildDMAPointer = (currentDMAPointer-1 + IC_BUFFER_SIZE) % IC_BUFFER_SIZE;
+	i = (lastVaildDMAPointer + IC_BUFFER_SIZE - 5) % IC_BUFFER_SIZE;
+
+	while (i != lastVaildDMAPointer)
 	{
-		count+=1;
+		uint32_t firstCapture = InputCaptureBuffer[i] ;
 
+		uint32_t NextCapture = InputCaptureBuffer[(i+1)%IC_BUFFER_SIZE];
+		sumdiff += NextCapture - firstCapture;
+		i = (i+1) % IC_BUFFER_SIZE;
 	}
-	if (count == 12)
-	{
-		Time_Round = HAL_GetTick();
-		TimeOf1Round = Time_Round - last_Time_Round;
-		count = 0;
-	}
-
-	//Round = count/12;
-
-	last_Time_Round = Time_Round;
-	last_counter = __HAL_DMA_GET_COUNTER((htim2.hdma[1]));
-
-	return ((1*60)/(TimeOf1Round*0.001));
+	return sumdiff / 5.0;
 }
 /* USER CODE END 4 */
 
