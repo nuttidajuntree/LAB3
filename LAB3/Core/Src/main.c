@@ -64,6 +64,12 @@ uint32_t lastVaildDMAPointer = 0;
 uint32_t firstCapture = 0;
 uint32_t NextCapture = 0;
 
+// Variable to select MotorSetDuty or MotorSetRPM
+uint32_t MotorControlEnable = 0;
+
+// Variable For MotorSetRPM
+uint32_t MotorSetRPM = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -132,12 +138,20 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  static uint32_t timestamp = 0;
-	  if (HAL_GetTick()>= timestamp)		//
+	  if (HAL_GetTick()>= timestamp)		// Frequency 500 ms to get value
 	  {
 		  timestamp = HAL_GetTick()+500;
 		  CountPulse = IC_Calc_Period();
 		  MotorReadRPM = (1000000*60)/(64*IC_Calc_Period()*12);
-		  duty = MotorSetDuty*10;
+
+		  if (MotorControlEnable == 0)
+		  {
+			  duty = MotorSetDuty*10;
+		  }
+		  else if (MotorControlEnable == 1)
+		  {
+			  duty = MotorSetRPM;
+		  }
 		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty);
 	  }
   }
@@ -412,11 +426,13 @@ float IC_Calc_Period()
 	lastVaildDMAPointer = (currentDMAPointer-1 + IC_BUFFER_SIZE) % IC_BUFFER_SIZE;
 	i = (lastVaildDMAPointer + IC_BUFFER_SIZE - 5) % IC_BUFFER_SIZE;
 
+	sumdiff = 0;
+
 	while (i != lastVaildDMAPointer)
 	{
-		uint32_t firstCapture = InputCaptureBuffer[i] ;
+		firstCapture = InputCaptureBuffer[i] ;
 
-		uint32_t NextCapture = InputCaptureBuffer[(i+1)%IC_BUFFER_SIZE];
+		NextCapture = InputCaptureBuffer[(i+1)%IC_BUFFER_SIZE];
 		sumdiff += NextCapture - firstCapture;
 		i = (i+1) % IC_BUFFER_SIZE;
 	}
