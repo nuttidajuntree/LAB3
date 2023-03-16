@@ -51,7 +51,7 @@ UART_HandleTypeDef huart2;
 uint32_t InputCaptureBuffer[IC_BUFFER_SIZE];
 
 // Variable For MotorSetDuty
-float MotorSetDuty = 0;
+float MotorSetDuty = 100;
 float duty = 0;
 
 // Variable For MotorReadRPM
@@ -73,6 +73,7 @@ float RPM_to_duty = 0;
 uint32_t SetDuty = 0;
 uint32_t ReadRPM = 0;
 uint32_t output = 0;
+uint32_t last_MotorSetRPM = 0;
 
 /* USER CODE END PV */
 
@@ -145,19 +146,26 @@ int main(void)
 	  static uint32_t timestamp = 0;
 	  if (HAL_GetTick()>= timestamp)		// Frequency 500 ms to get value
 	  {
-		  timestamp = HAL_GetTick()+500;
+		  timestamp = HAL_GetTick()+250;
 		  CountPulse = IC_Calc_Period()/5.0;
 		  MotorReadRPM = (1000000.0*60.0)/(64.0*CountPulse*12.0);
-
-		  if (MotorControlEnable == 0)
+		  if (MotorControlEnable == 1)
 		  {
-			  duty = MotorSetDuty*10.0;
+			  if (MotorSetRPM != last_MotorSetRPM)
+			  {
+				  MotorSetDuty = (MotorSetRPM*100.0)/21.0;
+			  }
+			  if (MotorReadRPM > MotorSetRPM)
+			  {
+				  MotorSetDuty -= 1;
+			  }
+			  else if (MotorReadRPM < MotorSetRPM)
+			  {
+				  MotorSetDuty += 1;
+			  }
+			  last_MotorSetRPM = MotorSetRPM;
 		  }
-		  else if (MotorControlEnable == 1)
-		  {
-			  duty = Set_RPM(MotorSetRPM,MotorReadRPM);
-		  }
-		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty);
+		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, MotorSetDuty*10.0);
 	  }
   }
   /* USER CODE END 3 */
@@ -446,7 +454,7 @@ float IC_Calc_Period()
 
 float Set_RPM(float MotorSetRPM,float MotorReadRPM)
 {
-	if(MotorSetRPM <= 10)							// 0-8 RPM
+	/*if(MotorSetRPM <= 10)							// 0-8 RPM
 	{
 		RPM_to_duty = (MotorSetRPM*300.0)/10.0;
 	}
@@ -463,9 +471,9 @@ float Set_RPM(float MotorSetRPM,float MotorReadRPM)
 		RPM_to_duty = (MotorSetRPM*800.0)/19.0;
 	}
 	else if(MotorSetRPM > 19 && MotorSetRPM <= 21)	// 20-21 RPM
-	{
+	{*/
 		RPM_to_duty = (MotorSetRPM*1000.0)/21.0;
-	}
+	//}
 
 	return RPM_to_duty;
 }
