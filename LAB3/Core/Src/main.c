@@ -144,7 +144,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  static uint32_t timestamp = 0;
-	  if (HAL_GetTick()>= timestamp)		// Frequency 500 ms to get value
+	  if (HAL_GetTick()>= timestamp)		// Frequency 250 ms to get value
 	  {
 		  timestamp = HAL_GetTick()+250;
 		  CountPulse = IC_Calc_Period()/5.0;
@@ -450,32 +450,6 @@ float IC_Calc_Period()
 		i = (i+1) % IC_BUFFER_SIZE;
 	}
 	return sumdiff;
-}
-
-float Set_RPM(float MotorSetRPM,float MotorReadRPM)
-{
-	/*if(MotorSetRPM <= 10)							// 0-8 RPM
-	{
-		RPM_to_duty = (MotorSetRPM*300.0)/10.0;
-	}
-	else if(MotorSetRPM > 10 && MotorSetRPM <= 13)	// 9-11 RPM
-	{
-		RPM_to_duty = (MotorSetRPM*400.0)/13.0;
-	}
-	else if(MotorSetRPM > 13 && MotorSetRPM <= 17)	// 12-16 RPM
-	{
-		RPM_to_duty = (MotorSetRPM*600.0)/17.0;
-	}
-	else if(MotorSetRPM > 17 && MotorSetRPM <= 19)	// 17-19 RPM
-	{
-		RPM_to_duty = (MotorSetRPM*800.0)/19.0;
-	}
-	else if(MotorSetRPM > 19 && MotorSetRPM <= 21)	// 20-21 RPM
-	{*/
-		RPM_to_duty = (MotorSetRPM*1000.0)/21.0;
-	//}
-
-	return RPM_to_duty;
 }
 /* USER CODE END 4 */
 
