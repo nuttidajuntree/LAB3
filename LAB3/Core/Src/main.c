@@ -52,11 +52,10 @@ uint32_t InputCaptureBuffer[IC_BUFFER_SIZE];
 
 // Variable For MotorSetDuty
 float MotorSetDuty = 100;
-float duty = 0;
 
 // Variable For MotorReadRPM
 float MotorReadRPM = 0;
-float CountPulse = 0;
+float Time_1_Input = 0;
 uint32_t i = 0;
 uint32_t sumdiff = 0;
 uint32_t currentDMAPointer = 0;
@@ -69,10 +68,6 @@ uint32_t MotorControlEnable = 0;
 
 // Variable For MotorSetRPM
 uint32_t MotorSetRPM = 0;
-float RPM_to_duty = 0;
-uint32_t SetDuty = 0;
-uint32_t ReadRPM = 0;
-uint32_t output = 0;
 uint32_t last_MotorSetRPM = 0;
 
 /* USER CODE END PV */
@@ -144,18 +139,19 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  static uint32_t timestamp = 0;
-	  if (HAL_GetTick()>= timestamp)		// Frequency 250 ms to get value
+	  if (HAL_GetTick()>= timestamp)			   // Frequency 250 ms to get value
 	  {
 		  timestamp = HAL_GetTick()+250;
-		  CountPulse = IC_Calc_Period()/5.0;
-		  MotorReadRPM = (1000000.0*60.0)/(64.0*CountPulse*12.0);
-		  if (MotorControlEnable == 1)
+		  Time_1_Input = IC_Calc_Period()/5.0;	   // avg time per 1 input
+		  MotorReadRPM = (1000000.0*60.0)/(64.0*Time_1_Input*12.0);
+
+		  if (MotorControlEnable == 1)			   // MotorSetRPM
 		  {
-			  if (MotorSetRPM != last_MotorSetRPM)
+			  if (MotorSetRPM != last_MotorSetRPM) // MotorSetRPM has change
 			  {
-				  MotorSetDuty = (MotorSetRPM*100.0)/21.0;
+				  MotorSetDuty = (MotorSetRPM*100.0)/21.0;	// compare to find duty
 			  }
-			  if (MotorReadRPM > MotorSetRPM)
+			  if (MotorReadRPM > MotorSetRPM)	   // if RPM is not equal, adjust duty
 			  {
 				  MotorSetDuty -= 1;
 			  }
@@ -163,7 +159,7 @@ int main(void)
 			  {
 				  MotorSetDuty += 1;
 			  }
-			  last_MotorSetRPM = MotorSetRPM;
+			  last_MotorSetRPM = MotorSetRPM;	   // keep last RPM
 		  }
 		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, MotorSetDuty*10.0);
 	  }
@@ -443,7 +439,7 @@ float IC_Calc_Period()
 
 	while (i != lastVaildDMAPointer)
 	{
-		firstCapture = InputCaptureBuffer[i] ;
+		firstCapture = InputCaptureBuffer[i];
 
 		NextCapture = InputCaptureBuffer[(i+1)%IC_BUFFER_SIZE];
 		sumdiff += NextCapture - firstCapture;

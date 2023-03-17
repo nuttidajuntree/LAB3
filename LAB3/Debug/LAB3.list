@@ -27,23 +27,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  00020010  2**0
                   CONTENTS, READONLY
- 12 .debug_info   0000d35b  00000000  00000000  00020040  2**0
+ 12 .debug_info   0000d31f  00000000  00000000  00020040  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 00001b40  00000000  00000000  0002d39b  2**0
+ 13 .debug_abbrev 00001b11  00000000  00000000  0002d35f  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_aranges 00000c18  00000000  00000000  0002eee0  2**3
+ 14 .debug_aranges 00000c10  00000000  00000000  0002ee70  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_ranges 00000b80  00000000  00000000  0002faf8  2**3
+ 15 .debug_ranges 00000b78  00000000  00000000  0002fa80  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  0001575f  00000000  00000000  00030678  2**0
+ 16 .debug_macro  0001575f  00000000  00000000  000305f8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0000d61a  00000000  00000000  00045dd7  2**0
+ 17 .debug_line   0000d5f7  00000000  00000000  00045d57  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    0008a201  00000000  00000000  000533f1  2**0
+ 18 .debug_str    0008a1f9  00000000  00000000  0005334e  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000050  00000000  00000000  000dd5f2  2**0
+ 19 .comment      00000050  00000000  00000000  000dd547  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00003468  00000000  00000000  000dd644  2**2
+ 20 .debug_frame  00003444  00000000  00000000  000dd598  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1111,7 +1111,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  static uint32_t timestamp = 0;
-	  if (HAL_GetTick()>= timestamp)		// Frequency 500 ms to get value
+	  if (HAL_GetTick()>= timestamp)		// Frequency 250 ms to get value
  8000d98:	f000 fda2 	bl	80018e0 <HAL_GetTick>
  8000d9c:	4602      	mov	r2, r0
  8000d9e:	4b5f      	ldr	r3, [pc, #380]	; (8000f1c <main+0x1c4>)
